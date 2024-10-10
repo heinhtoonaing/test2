@@ -4,31 +4,28 @@ import Category from '@/models/Category';
 // Fetch categories
 export async function GET(request) {
   try {
-    // Pagination handling
-    const pno = request.nextUrl.searchParams.get("pno");
-    if (pno) {
-      const size = 3; // TODO: Change this to a dynamic size parameter later if needed
-      const startIndex = (pno - 1) * size;
-      const categories = await Category.find()
-        .sort({ order: -1 })
-        .skip(startIndex)
-        .limit(size);
-      return NextResponse.json(categories, { status: 200 });
-    }
-
-    // Search handling
+    // Pagination and size handling
+    const pno = parseInt(request.nextUrl.searchParams.get("pno")) || 1;
+    const size = parseInt(request.nextUrl.searchParams.get("size")) || 3;
     const s = request.nextUrl.searchParams.get("s");
+
+    let categories;
+
     if (s) {
-      const categories = await Category
-        .find({ name: { $regex: s, $options: 'i' } }) // Case-insensitive search
-        .sort({ order: -1 });
-      return NextResponse.json(categories, { status: 200 });
+      // Search handling
+      categories = await Category.find({ name: { $regex: s, $options: 'i' } }) // Case-insensitive search
+        .sort({ order: -1 })
+        .skip((pno - 1) * size)
+        .limit(size);
+    } else {
+      // Default: Return all categories with pagination
+      categories = await Category.find()
+        .sort({ order: -1 })
+        .skip((pno - 1) * size)
+        .limit(size);
     }
 
-    // Default: Return all categories
-    const categories = await Category.find().sort({ order: -1 });
     return NextResponse.json(categories, { status: 200 });
-
   } catch (error) {
     console.error(error); // Log the error for debugging
     return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
@@ -39,7 +36,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    
+
     // Basic validation
     if (!body.name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
@@ -47,7 +44,7 @@ export async function POST(request) {
 
     const category = new Category(body);
     await category.save();
-    return NextResponse.json(category, { status: 201 });
+    return NextResponse.json({ category }, { status: 201 });
   } catch (error) {
     console.error(error); // Log the error for debugging
     return NextResponse.json({ error: 'Failed to create category' }, { status: 500 });
@@ -58,7 +55,7 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     const body = await request.json();
-    
+
     // Basic validation
     if (!body._id) {
       return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
@@ -70,7 +67,7 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 });
     }
 
-    return NextResponse.json(category, { status: 200 });
+    return NextResponse.json({ category }, { status: 200 });
   } catch (error) {
     console.error(error); // Log the error for debugging
     return NextResponse.json({ error: 'Failed to update category' }, { status: 500 });

@@ -2,11 +2,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { DataGrid } from "@mui/x-data-grid";
-import Link from "next/link";
 
-export default function Home() {
+export default function ProductManagement() {
   const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-  const [categoryList, setCategoryList] = useState([]);
+  const [productList, setProductList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -14,97 +13,102 @@ export default function Home() {
 
   const columns = [
     { field: 'name', headerName: 'Name', width: 150 },
+    { field: 'description', headerName: 'Description', width: 250 },
+    { field: 'price', headerName: 'Price', width: 150 },
     { field: 'order', headerName: 'Order', width: 150 },
     {
       field: 'Action', headerName: 'Action', width: 150,
       renderCell: (params) => (
         <div>
           <button onClick={() => startEditMode(params.row)}>📝</button>
-          <button onClick={() => deleteCategory(params.row)}>🗑️</button>
+          <button onClick={() => deleteProduct(params.row)}>🗑️</button>
         </div>
-      )
+      ),
     },
   ];
 
-  // Fetch Categories
-  const fetchCategory = useCallback(async () => {
+  // Fetch Products
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetch(`${API_BASE}/category`);
-      const c = await data.json();
-      const c2 = c.map((category) => ({ ...category, id: category._id }));
-      setCategoryList(c2);
+      const response = await fetch(`${API_BASE}/product`);
+      if (!response.ok) throw new Error("Failed to fetch products");
+      const products = await response.json();
+      const formattedProducts = products.map((product) => ({ ...product, id: product._id }));
+      setProductList(formattedProducts);
     } catch (err) {
-      setError("Failed to fetch categories");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [API_BASE]); // Include API_BASE in the dependencies
+  }, [API_BASE]);
 
   useEffect(() => {
-    fetchCategory();
-  }, [fetchCategory]);
+    fetchProducts();
+  }, [fetchProducts]);
 
-  // Form Submission (Add or Update Category)
-  function handleCategoryFormSubmit(data) {
-    if (editMode) {
-      // Updating a category
-      fetch(`${API_BASE}/category`, {
-        method: "PUT",
+  // Form Submission (Add or Update Product)
+  const handleProductFormSubmit = async (data) => {
+    const method = editMode ? "PUT" : "POST";
+    const endpoint = editMode ? `${API_BASE}/product` : `${API_BASE}/product`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-      }).then(() => {
-        stopEditMode();
-        fetchCategory();
       });
-      return;
+      if (!response.ok) throw new Error("Failed to submit product");
+      reset(); // Reset the form after successful submission
+      fetchProducts(); // Refetch products after submit
+      setEditMode(false); // Exit edit mode if applicable
+    } catch (err) {
+      setError(err.message);
     }
-
-    // Creating a new category
-    fetch(`${API_BASE}/category`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }).then(() => fetchCategory());
-  }
+  };
 
   // Edit Mode
-  function startEditMode(category) {
-    reset(category);
+  const startEditMode = (product) => {
+    reset(product);
     setEditMode(true);
-  }
+  };
 
-  function stopEditMode() {
+  const stopEditMode = () => {
     reset({
       name: '',
+      description: '',
+      price: '',
       order: ''
     });
     setEditMode(false);
-  }
+  };
 
-  // Delete Category
-  async function deleteCategory(category) {
-    if (!confirm(`Are you sure to delete [${category.name}]`)) return;
-    const id = category._id;
-    await fetch(`${API_BASE}/category/${id}`, { method: "DELETE" });
-    fetchCategory();
-  }
+  // Delete Product
+  const deleteProduct = async (product) => {
+    if (!confirm(`Are you sure to delete [${product.name}]?`)) return;
+    const id = product._id;
+    try {
+      const response = await fetch(`${API_BASE}/product/${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("Failed to delete product");
+      fetchProducts();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   // Handle Loading and Error States
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <main>
       {/* Form */}
-      <form onSubmit={handleSubmit(handleCategoryFormSubmit)}>
+      <form onSubmit={handleSubmit(handleProductFormSubmit)}>
         <div className="grid grid-cols-2 gap-4 w-fit m-4 border border-gray-800 p-2">
-          <div>Category name:</div>
+          <div>Product Name:</div>
           <div>
             <input
               name="name"
@@ -113,6 +117,28 @@ export default function Home() {
               className="border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             />
             {errors.name && <p className="text-red-500">{errors.name.message}</p>}
+          </div>
+
+          <div>Description:</div>
+          <div>
+            <input
+              name="description"
+              type="text"
+              {...register("description", { required: "Description is required" })}
+              className="border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            />
+            {errors.description && <p className="text-red-500">{errors.description.message}</p>}
+          </div>
+
+          <div>Price:</div>
+          <div>
+            <input
+              name="price"
+              type="number"
+              {...register("price", { required: "Price is required", min: { value: 0, message: "Price must be a non-negative number" } })}
+              className="border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            />
+            {errors.price && <p className="text-red-500">{errors.price.message}</p>}
           </div>
 
           <div>Order:</div>
@@ -137,6 +163,7 @@ export default function Home() {
                 {' '}
                 <button
                   onClick={stopEditMode}
+                  type="button" // Prevent form submission
                   className="italic bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full"
                 >
                   Cancel
@@ -156,7 +183,7 @@ export default function Home() {
       {/* Data Grid */}
       <div className="mx-4">
         <DataGrid
-          rows={categoryList}
+          rows={productList}
           columns={columns}
           pageSize={5}
           rowsPerPageOptions={[5, 10, 20]}

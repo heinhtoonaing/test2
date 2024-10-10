@@ -13,7 +13,7 @@ export default function Home() {
   // Fetch Products
   async function fetchProducts() {
     try {
-      const response = await fetch(`${APIBASE}/product`);
+      const response = await fetch(`${API_BASE}/product`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

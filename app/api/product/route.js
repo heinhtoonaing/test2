@@ -4,14 +4,14 @@ import Product from '@/models/Product';
 // Fetch all products
 export async function GET() {
   try {
-    const product = await Product.findById(id);  // Without populate
-
+    const products = await Product.find();  // Fetch all products
     return NextResponse.json(products, { status: 200 });
   } catch (error) {
     console.error(error); // Log the error for debugging
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }
+
 
 // Create a new product
 export async function POST(request) {
@@ -75,8 +75,9 @@ export async function PATCH(request) {
 }
 
 // Delete a product by ID
-export async function DELETE(request, { params }) {
-  const { id } = params; // Extract ID from the URL parameters
+export async function DELETE(request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id'); // Extract ID from the URL query parameters
 
   try {
     const product = await Product.findByIdAndDelete(id);
@@ -91,3 +92,4 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
   }
 }
+

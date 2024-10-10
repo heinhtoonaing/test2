@@ -1,6 +1,5 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-// Define the category schema
 const categorySchema = new mongoose.Schema({
   name: {
     type: String,
@@ -8,11 +7,10 @@ const categorySchema = new mongoose.Schema({
   },
   order: {
     type: Number,
-    default: 0, // Optional: Set a default value for order if needed
+    required: true,
   },
 });
 
-// Create the Category model
-const Category = mongoose.models.Category || mongoose.model("Category", categorySchema);
+const Category = mongoose.models.Category || mongoose.model('Category', categorySchema);
 
 export default Category;
