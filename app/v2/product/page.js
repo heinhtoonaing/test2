@@ -11,18 +11,18 @@ export default function Home() {
   const [category, setCategory] = useState([]);
 
   const startEdit = (id) => async () => {
-    // TODO
+    // TODO: Implement edit functionality here
   }
 
   async function fetchProducts() {
-    const data = await fetch(`${APIBASE}/product`);
-    const p = await data.json();
+    const response = await fetch(`${APIBASE}/product`);
+    const p = await response.json();
     setProducts(p);
   }
 
   async function fetchCategory() {
-    const data = await fetch(`${APIBASE}/category`);
-    const c = await data.json();
+    const response = await fetch(`${APIBASE}/category`);
+    const c = await response.json();
     setCategory(c);
   }
 
@@ -86,7 +86,7 @@ export default function Home() {
               <div>Price:</div>
               <div>
                 <input
-                  name="name"
+                  name="price"  // Fixed the name attribute here
                   type="number"
                   {...register("price", { required: true })}
                   className="border border-black w-full"
@@ -99,6 +99,7 @@ export default function Home() {
                   {...register("category", { required: true })}
                   className="border border-black w-full"
                 >
+                  <option value="">Select a category</option>
                   {category.map((c) => (
                     <option key={c._id} value={c._id}>{c.name}</option>
                   ))}
@@ -120,8 +121,8 @@ export default function Home() {
             {
               products.map((p) => (
                 <li key={p._id}>
-                  <button className="border border-black p-1/2" onClick={startEdit(p._id)}>📝</button>{' '}
-                  <button className="border border-black p-1/2" onClick={deleteById(p._id)}>❌</button>{' '}
+                  <button className="border border-black p-1" onClick={startEdit(p._id)}>📝</button>{' '}
+                  <button className="border border-black p-1" onClick={deleteById(p._id)}>❌</button>{' '}
                   <Link href={`/product/${p._id}`} className="font-bold">
                     {p.name}
                   </Link>{" "}

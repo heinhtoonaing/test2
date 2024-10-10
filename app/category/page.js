@@ -1,11 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { DataGrid } from "@mui/x-data-grid";
 import Link from "next/link";
 
 export default function Home() {
-
   const API_BASE = process.env.NEXT_PUBLIC_API_URL;
   const [categoryList, setCategoryList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -28,7 +27,7 @@ export default function Home() {
   ];
 
   // Fetch Categories
-  async function fetchCategory() {
+  const fetchCategory = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -41,11 +40,11 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [API_BASE]); // Include API_BASE in the dependencies
 
   useEffect(() => {
     fetchCategory();
-  }, []);
+  }, [fetchCategory]);
 
   // Form Submission (Add or Update Category)
   function handleCategoryFormSubmit(data) {

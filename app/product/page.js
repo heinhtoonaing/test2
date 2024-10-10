@@ -10,18 +10,31 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState([]);
 
+  // Fetch Products
   async function fetchProducts() {
-    const data = await fetch(`${API_BASE}/product`);
-    const p = await data.json();
-    setProducts(p);
+    try {
+      const response = await fetch(`${APIBASE}/product`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const p = await response.json();
+      console.log("Fetched Products:", p);  // Log the fetched products
+      setProducts(Array.isArray(p) ? p : []); // Set to empty array if not an array
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setProducts([]); // Set to empty array on error
+    }
   }
+  
 
+  // Fetch Categories
   async function fetchCategory() {
-    const data = await fetch(`${API_BASE}/category`);
-    const c = await data.json();
-    setCategory(c);
+    const response = await fetch(`${API_BASE}/category`);
+    const data = await response.json();
+    setCategory(data);
   }
 
+  // Create a new product
   const createProduct = (data) => {
     fetch(`${API_BASE}/product`, {
       method: "POST",
@@ -32,15 +45,17 @@ export default function Home() {
     }).then(() => fetchProducts());
   };
 
+  // Delete a product by ID
   const deleteById = (id) => async () => {
     if (!confirm("Are you sure?")) return;
-    
+
     await fetch(`${API_BASE}/product/${id}`, {
       method: "DELETE",
     });
     fetchProducts();
-  }
+  };
 
+  // Fetch categories and products on component mount
   useEffect(() => {
     fetchCategory();
     fetchProducts();
@@ -80,7 +95,7 @@ export default function Home() {
             <div>Price:</div>
             <div>
               <input
-                name="price"  // Fixed the name attribute here
+                name="price"
                 type="number"
                 {...register("price", { required: true })}
                 className="border border-black w-full"
@@ -93,7 +108,7 @@ export default function Home() {
                 {...register("category", { required: true })}
                 className="border border-black w-full"
               >
-                <option value="">Select a category</option> {/* Default option */}
+                <option value="">Select a category</option>
                 {category.map((c) => (
                   <option key={c._id} value={c._id}>{c.name}</option>
                 ))}
