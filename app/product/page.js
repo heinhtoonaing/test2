@@ -12,7 +12,6 @@ export default function Home() {
 
   async function fetchProducts() {
     const data = await fetch(`${API_BASE}/product`);
-    // const data = await fetch(`http://localhost:3000/product`);
     const p = await data.json();
     setProducts(p);
   }
@@ -49,7 +48,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-row gap-4">
-      <div className="flex-1 w-64 ">
+      <div className="flex-1 w-64">
         <form onSubmit={handleSubmit(createProduct)}>
           <div className="grid grid-cols-2 gap-4 m-4 w-1/2">
             <div>Code:</div>
@@ -81,7 +80,7 @@ export default function Home() {
             <div>Price:</div>
             <div>
               <input
-                name="name"
+                name="price"  // Fixed the name attribute here
                 type="number"
                 {...register("price", { required: true })}
                 className="border border-black w-full"
@@ -94,6 +93,7 @@ export default function Home() {
                 {...register("category", { required: true })}
                 className="border border-black w-full"
               >
+                <option value="">Select a category</option> {/* Default option */}
                 {category.map((c) => (
                   <option key={c._id} value={c._id}>{c.name}</option>
                 ))}
@@ -112,16 +112,15 @@ export default function Home() {
       <div className="border m-4 bg-slate-300 flex-1 w-64">
         <h1 className="text-2xl">Products ({products.length})</h1>
         <ul className="list-disc ml-8">
-          {
-            products.map((p) => (
-              <li key={p._id}>
-                <button className="border border-black p-1/2" onClick={deleteById(p._id)}>❌</button>{' '}
-                <Link href={`/product/${p._id}`} className="font-bold">
-                  {p.name}
-                </Link>{" "}
-                - {p.description}
-              </li>
-            ))}
+          {products.map((p) => (
+            <li key={p._id}>
+              <button className="border border-black p-1" onClick={deleteById(p._id)}>❌</button>{' '}
+              <Link href={`/product/${p._id}`} className="font-bold">
+                {p.name}
+              </Link>{" "}
+              - {p.description}
+            </li>
+          ))}
         </ul>
       </div>
     </div>
